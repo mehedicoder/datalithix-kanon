@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ai.datalithix</groupId>
+        <artifactId>datalithix-kanon</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kanon-annotation</artifactId>
+    <name>kanon-annotation</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>ai.datalithix</groupId>
+            <artifactId>kanon-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.datalithix</groupId>
+            <artifactId>kanon-evidence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

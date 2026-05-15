@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: datalithix-kanon
+  profiles:
+    default: local-db
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+kanon:
+  connectors:
+    upload-enabled: true
+    email-enabled: true
+    rest-webhook-enabled: true
+    database-import-enabled: true
+    object-storage-enabled: true
+    manual-entry-enabled: true

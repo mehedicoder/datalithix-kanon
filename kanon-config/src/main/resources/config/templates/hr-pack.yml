@@ -1,0 +1,194 @@
+id: hr-pack
+displayName: HR Configuration Pack
+domains:
+  - id: hr
+    displayName: Human Resources
+    domainType: HR
+    entities:
+      - name: resume
+        displayName: Resume
+      - name: candidate
+        displayName: Candidate
+      - name: jobDescription
+        displayName: Job Description
+    fields:
+      - name: candidateName
+        displayName: Candidate Name
+        type: STRING
+        required: true
+      - name: email
+        displayName: Email
+        type: STRING
+        required: false
+      - name: skills
+        displayName: Skills
+        type: JSON
+        required: false
+      - name: experienceYears
+        displayName: Experience Years
+        type: NUMBER
+        required: false
+    ruleIds:
+      - GDPR_PII_MASKING
+      - BiasDetectionCheck
+    agentDefinitionIds:
+      - hr-ingestion-agent
+      - resume-extraction-agent
+      - hr-review-agent
+    workflowTemplateIds:
+      - candidate-screening
+    supportedAssetTypes:
+      - DOCUMENT
+      - EMAIL
+      - FORM
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - MANUAL_ENTRY
+      - REST_API
+tenants:
+  - tenantId: hr-demo
+    displayName: HR Demo Tenant
+    domainType: HR
+    countryCode: DE
+    regulatoryAct: GDPR
+    dataResidency: EU
+    allowCloudModels: false
+    preferLocalModels: true
+    enabledPolicyIds:
+      - gdpr-hr
+    enabledConnectorIds:
+      - hr-upload-ingestion
+      - hr-email-ingestion
+      - hr-manual-entry
+    modelRoutingPolicyId: hr-default-routing
+    preferences:
+      reviewRequired: "true"
+      piiMasking: "true"
+workflows:
+  - id: candidate-screening
+    displayName: Candidate Screening
+    domainType: HR
+    taskType: EXTRACTION
+    steps:
+      - REGISTER_ASSET
+      - CHECK_POLICY
+      - ROUTE_MODEL
+      - EXTRACT_PROFILE
+      - HUMAN_REVIEW
+      - APPROVE_OR_ESCALATE
+      - MARK_EXPORT_READY
+    plannerType: TEMPLATE
+    fallbackWorkflowId: null
+agents:
+  - id: hr-ingestion-agent
+    displayName: HR Ingestion Agent
+    agentType: INGESTION
+    supportedDomains:
+      - HR
+    supportedTaskTypes:
+      - EXTRACTION
+    supportedAssetTypes:
+      - DOCUMENT
+      - EMAIL
+      - FORM
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - MANUAL_ENTRY
+    inputSchemaRef: source-trace-v1
+    outputSchemaRef: candidate-asset-v1
+    modelRoutePolicy: hr-default-routing
+  - id: resume-extraction-agent
+    displayName: Resume Extraction Agent
+    agentType: EXTRACTION_ANNOTATION
+    supportedDomains:
+      - HR
+    supportedTaskTypes:
+      - EXTRACTION
+      - SCORING
+    supportedAssetTypes:
+      - DOCUMENT
+      - EMAIL
+      - FORM
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - MANUAL_ENTRY
+      - REST_API
+    inputSchemaRef: resume-input-v1
+    outputSchemaRef: candidate-profile-v1
+    modelRoutePolicy: hr-default-routing
+  - id: hr-review-agent
+    displayName: HR Review Orchestration Agent
+    agentType: REVIEW_ORCHESTRATION
+    supportedDomains:
+      - HR
+    supportedTaskTypes:
+      - COMPLIANCE_CHECK
+      - SCORING
+    supportedAssetTypes:
+      - DOCUMENT
+      - EMAIL
+      - FORM
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - MANUAL_ENTRY
+    inputSchemaRef: review-input-v1
+    outputSchemaRef: review-output-v1
+    modelRoutePolicy: hr-default-routing
+modelRoutingPolicies:
+  - id: hr-default-routing
+    displayName: HR Default Routing
+    routes:
+      EXTRACTION:
+        primaryProfile: local-reasoning-primary
+        fallbackProfile: local-reasoning-fallback
+        reason: Local-first HR profile extraction
+      SCORING:
+        primaryProfile: local-reasoning-primary
+        fallbackProfile: local-utility-primary
+        reason: Strong reasoning with local utility fallback
+      COMPLIANCE_CHECK:
+        primaryProfile: local-compliance-primary
+        fallbackProfile: local-reasoning-fallback
+        reason: GDPR-sensitive checks stay local by default
+connectors:
+  - id: hr-upload-ingestion
+    displayName: HR Upload Connector
+    sourceCategory: DOCUMENT
+    sourceType: FILE_UPLOAD
+    tenantScoped: true
+    supportsAttachments: true
+    defaults:
+      maxFileSizeMb: "50"
+      allowedTypes: "pdf,docx,csv,jpg,png,zip"
+  - id: hr-email-ingestion
+    displayName: HR Email Connector
+    sourceCategory: COMMUNICATION
+    sourceType: EMAIL_INBOX
+    tenantScoped: true
+    supportsAttachments: true
+    defaults:
+      protocol: IMAP
+      importBodyText: "true"
+  - id: hr-manual-entry
+    displayName: HR Manual Entry Connector
+    sourceCategory: INTERACTIVE
+    sourceType: MANUAL_ENTRY
+    tenantScoped: true
+    supportsAttachments: true
+    defaults:
+      auditManualNotes: "true"
+policies:
+  - id: gdpr-hr
+    displayName: GDPR HR Policy
+    ruleIds:
+      - GDPR_PII_MASKING
+      - BiasDetectionCheck
+      - HUMAN_REVIEW_REQUIRED
+    complianceTags:
+      - GDPR
+      - PII
+      - AUDIT_REQUIRED

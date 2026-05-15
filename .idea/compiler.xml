@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="kanon-policy" />
+        <module name="kanon-api" />
+        <module name="kanon-config" />
+        <module name="kanon-ai-routing" />
+        <module name="kanon-annotation" />
+        <module name="kanon-domain" />
+        <module name="kanon-evidence" />
+        <module name="kanon-training" />
+        <module name="kanon-dataset" />
+        <module name="kanon-tenant" />
+        <module name="kanon-model-registry" />
+        <module name="kanon-active-learning" />
+        <module name="kanon-ui" />
+        <module name="kanon-agent-runtime" />
+        <module name="kanon-ingestion" />
+        <module name="kanon-common" />
+        <module name="kanon-workflow" />
+        <module name="kanon-bootstrap" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="nexus-agent-runtime" target="25" />
+      <module name="nexus-ai-routing" target="25" />
+      <module name="nexus-annotation" target="25" />
+      <module name="nexus-api" target="25" />
+      <module name="nexus-bootstrap" target="25" />
+      <module name="nexus-common" target="25" />
+      <module name="nexus-config" target="25" />
+      <module name="nexus-domain" target="25" />
+      <module name="nexus-evidence" target="25" />
+      <module name="nexus-ingestion" target="25" />
+      <module name="nexus-policy" target="25" />
+      <module name="nexus-tenant" target="25" />
+      <module name="nexus-ui" target="25" />
+      <module name="nexus-workflow" target="25" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

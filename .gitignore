@@ -1,0 +1,33 @@
+# IDE metadata
+.idea/
+*.iml
+
+# Java build outputs
+target/
+**/target/
+*.class
+
+# Generated frontend and JavaScript artifacts
+**/src/main/frontend/generated/
+**/frontend/generated/
+**/generated/
+*.generated.js
+*.generated.ts
+*.generated.d.ts
+
+# Node/Vaadin local artifacts
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+vite.generated.ts
+vite.config.ts
+types.d.ts
+
+# Logs and runtime noise
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,196 @@
+id: accounting-pack
+displayName: Accounting Configuration Pack
+domains:
+  - id: accounting
+    displayName: Accounting
+    domainType: ACCOUNTING
+    entities:
+      - name: invoice
+        displayName: Invoice
+      - name: ledgerEntry
+        displayName: Ledger Entry
+      - name: vendor
+        displayName: Vendor
+    fields:
+      - name: invoiceNumber
+        displayName: Invoice Number
+        type: STRING
+        required: true
+      - name: invoiceDate
+        displayName: Invoice Date
+        type: DATE
+        required: true
+      - name: grossAmount
+        displayName: Gross Amount
+        type: MONEY
+        required: true
+      - name: vatAmount
+        displayName: VAT Amount
+        type: MONEY
+        required: false
+    ruleIds:
+      - VAT_DE_19_PERCENT
+      - HGB_COMPLIANCE_CHECK
+    agentDefinitionIds:
+      - accounting-ingestion-agent
+      - invoice-extraction-agent
+      - accounting-review-agent
+    workflowTemplateIds:
+      - invoice-processing
+    supportedAssetTypes:
+      - DOCUMENT
+      - IMAGE
+      - EMAIL
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - DATABASE_IMPORT
+      - REST_API
+tenants:
+  - tenantId: accounting-demo
+    displayName: Accounting Demo Tenant
+    domainType: ACCOUNTING
+    countryCode: DE
+    regulatoryAct: HGB
+    dataResidency: DE
+    allowCloudModels: false
+    preferLocalModels: true
+    enabledPolicyIds:
+      - eu-ai-act
+      - accounting-hgb
+    enabledConnectorIds:
+      - upload-ingestion
+      - email-ingestion
+      - postgres-import
+    modelRoutingPolicyId: accounting-default-routing
+    preferences:
+      currency: EUR
+      reviewRequired: "true"
+workflows:
+  - id: invoice-processing
+    displayName: Invoice Processing
+    domainType: ACCOUNTING
+    taskType: EXTRACTION
+    steps:
+      - REGISTER_ASSET
+      - CHECK_POLICY
+      - ROUTE_MODEL
+      - EXTRACT_FIELDS
+      - HUMAN_REVIEW
+      - APPROVE_OR_ESCALATE
+      - MARK_EXPORT_READY
+    plannerType: TEMPLATE
+    fallbackWorkflowId: null
+agents:
+  - id: accounting-ingestion-agent
+    displayName: Accounting Ingestion Agent
+    agentType: INGESTION
+    supportedDomains:
+      - ACCOUNTING
+    supportedTaskTypes:
+      - EXTRACTION
+    supportedAssetTypes:
+      - DOCUMENT
+      - IMAGE
+      - EMAIL
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - DATABASE_IMPORT
+    inputSchemaRef: source-trace-v1
+    outputSchemaRef: media-asset-v1
+    modelRoutePolicy: accounting-default-routing
+  - id: invoice-extraction-agent
+    displayName: Invoice Extraction Agent
+    agentType: EXTRACTION_ANNOTATION
+    supportedDomains:
+      - ACCOUNTING
+    supportedTaskTypes:
+      - EXTRACTION
+      - OCR_POST_PROCESSING
+    supportedAssetTypes:
+      - DOCUMENT
+      - IMAGE
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+    inputSchemaRef: invoice-input-v1
+    outputSchemaRef: invoice-output-v1
+    modelRoutePolicy: accounting-default-routing
+  - id: accounting-review-agent
+    displayName: Accounting Review Orchestration Agent
+    agentType: REVIEW_ORCHESTRATION
+    supportedDomains:
+      - ACCOUNTING
+    supportedTaskTypes:
+      - COMPLIANCE_CHECK
+    supportedAssetTypes:
+      - DOCUMENT
+      - IMAGE
+    supportedSourceTypes:
+      - FILE_UPLOAD
+      - EMAIL_INBOX
+      - DATABASE_IMPORT
+    inputSchemaRef: review-input-v1
+    outputSchemaRef: review-output-v1
+    modelRoutePolicy: accounting-default-routing
+modelRoutingPolicies:
+  - id: accounting-default-routing
+    displayName: Accounting Default Routing
+    routes:
+      EXTRACTION:
+        primaryProfile: local-reasoning-primary
+        fallbackProfile: local-reasoning-fallback
+        reason: Local-first accounting extraction
+      CLASSIFICATION:
+        primaryProfile: local-classification-primary
+        fallbackProfile: local-classification-fallback
+        reason: Low-latency local classification
+      COMPLIANCE_CHECK:
+        primaryProfile: local-compliance-primary
+        fallbackProfile: local-reasoning-fallback
+        reason: HGB/GDPR compliance checks stay local by default
+connectors:
+  - id: upload-ingestion
+    displayName: Upload Connector
+    sourceCategory: DOCUMENT
+    sourceType: FILE_UPLOAD
+    tenantScoped: true
+    supportsAttachments: true
+    defaults:
+      maxFileSizeMb: "100"
+      allowedTypes: "pdf,docx,xlsx,csv,jpg,png,zip"
+  - id: email-ingestion
+    displayName: Email Connector
+    sourceCategory: COMMUNICATION
+    sourceType: EMAIL_INBOX
+    tenantScoped: true
+    supportsAttachments: true
+    defaults:
+      protocol: IMAP
+      importBodyText: "true"
+  - id: postgres-import
+    displayName: PostgreSQL Import Connector
+    sourceCategory: STORAGE
+    sourceType: DATABASE_IMPORT
+    tenantScoped: true
+    supportsAttachments: false
+    defaults:
+      batchSize: "500"
+policies:
+  - id: eu-ai-act
+    displayName: EU AI Act Policy
+    ruleIds:
+      - EU_AI_ACT_TRACEABILITY
+      - HUMAN_REVIEW_REQUIRED
+    complianceTags:
+      - EU_AI_ACT
+      - AUDIT_REQUIRED
+  - id: accounting-hgb
+    displayName: German HGB Accounting Policy
+    ruleIds:
+      - HGB_COMPLIANCE_CHECK
+      - VAT_DE_19_PERCENT
+    complianceTags:
+      - HGB
+      - GDPR

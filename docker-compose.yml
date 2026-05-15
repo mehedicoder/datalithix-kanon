@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: datalithix_kanon
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d datalithix_kanon"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kanon:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: cloud
+      KANON_POSTGRES_URL: jdbc:postgresql://postgres:5432/datalithix_kanon
+      KANON_POSTGRES_USERNAME: postgres
+      KANON_POSTGRES_PASSWORD: postgres
+      KANON_MONGODB_URI: mongodb://mongodb:27017/datalithix_kanon
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/datalithix_kanon
+      SPRING_MONGODB_URI: mongodb://mongodb:27017/datalithix_kanon
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: datalithix_kanon
+      KANON_OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      KANON_OBJECT_STORAGE_BUCKET: kanon-assets
+      KANON_OBJECT_STORAGE_ACCESS_KEY: minioadmin
+      KANON_OBJECT_STORAGE_SECRET_KEY: minioadmin
+    ports:
+      - "8081:8080"
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  minio-data:
